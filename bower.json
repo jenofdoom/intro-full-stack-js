@@ -1,0 +1,10 @@
+{
+  "name": "voteatron",
+  "version": "0.0.1",
+  "dependencies": {
+    "react": "~0.13.3",
+    "Chart.js": "~1.0.2",
+    "socket.io-client": "~1.3.5",
+    "skeleton": "https://raw.githubusercontent.com/dhg/Skeleton/2.0.4/css/skeleton.css"
+  }
+}

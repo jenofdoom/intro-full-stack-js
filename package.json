@@ -1,0 +1,10 @@
+{
+  "name": "voteatron",
+  "version": "0.0.1",
+  "description": "a classroom voting app",
+  "dependencies": {
+    "express": "^4.10.2",
+    "hashids": "^1.0.1",
+    "socket.io": "^1.3.5"
+  }
+}
