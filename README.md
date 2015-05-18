@@ -43,3 +43,69 @@ Run the following two commands (from inside the `javascript-masterclass` directo
     bower install
 
 And you're all set! We'll pick up from this point.
+
+## Building the application
+
+We're going to build a classroom voting application. We'll be using JavaScript both on the server side (node, express, socket.io) and on the client side (react, Chart.js, and the socket.io client side library).
+
+### Serving index.html
+
+We'll need a web server in order to serve our stub index.html file properly. Create a file called `app.js` in the root folder of the application with the following code:
+
+```js
+var express = require('express');
+var app = express();
+var http = require('http').Server(app);
+
+app.use(express.static('public'));
+
+app.get('*', function(req, res){
+  res.sendFile(__dirname + '/index.html');
+});
+
+http.listen(3000, function(){
+  console.log('listening on *:3000');
+});
+```
+
+Now, on the command line we should be able to run `node app.js` and get back a message saying `listening on *:3000`. If you navigate to [localhost:3000](http://localhost:3000/) in a browser you should see the title of our application in a grey font (because the basic stylesheet is being served correctly).
+
+#### Important note
+
+When you makes changes to `app.js` you will have to restart the server before they will take effect. In your terminal where the `node app.js` process is running, exit by pressing `Control-C`. Then run `node app.js` again.
+
+### Communicating via sockets
+
+### Building our first react component
+
+### Creating a room
+
+### Displaying the new room
+
+### Letting others join the room
+
+#### via lobby
+
+#### via url
+
+### Setting a question and answers
+
+#### Re-setting it
+
+### Going back to the lobby
+
+### Handling the room owner disconnecting (nice to have?)
+
+### Letting people vote
+
+### Displaying the vote results
+
+## Ways in which we could expand our application
+
+### How we'd build this in real life
+
+#### Serving it properly
+
+#### Using a database, garbage collection
+
+### Features we could add
