@@ -98,6 +98,44 @@ When you refresh the page, you should see a message about a user connecting. If 
 
 ### Building our first react component
 
+There's not much to see yet - let's add a component to our client side page. In `index.html`, underneath the H1 tag, add an empty div that we will be inserting our react component into:
+
+```html
+<div id="content"></div>
+```
+
+React and its JSX compiler are already included at the bottom of the file, but we should also add a file for us to put our custom code in. Because react is designed to be modular, we will create a file for each component. Let's make a component for our lobby, where users will be able to create new rooms or join existing ones. Make a file called `LobbyControls.js` in `public/javascripts` and give it the following contents:
+
+```js
+var LobbyControls = React.createClass({
+  render: function() {
+    return (
+      <div>
+        <h2>You are not in a room</h2>
+        <p>Enter an existing room:</p>
+        <button>button goes here</button>
+        <p>Or create a new one:</p>
+        <button>button goes here</button>
+      </div>
+    );
+  }
+});
+```
+
+We also need to include our new file in `index.html`, and bootstrap the react component. At the bottom of `index.html`, just before the `</body>`, add the following:
+
+```html
+<script src="javascripts/LobbyControls.js" type="text/jsx"></script>
+<script type="text/jsx">
+React.render(
+  <LobbyControls />,
+  document.getElementById('content')
+);
+</script>
+```
+
+When you refresh the page you should see the elements being rendered.
+
 ### Creating a room
 
 ### Displaying the new room
