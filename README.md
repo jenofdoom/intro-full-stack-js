@@ -250,11 +250,143 @@ socket.join(hash);
 
 ### Displaying the new room
 
+Now that we have more than just a lobby we want to show, it makes sense to replace `<LobbyControls />` as the main component we are rendering. We will replace it with a component we will call "App", which will control if the user is current in the lobby or in a room, and show or hide components as necessary.
+
+#### Adding an app component
+
+Create a new component file called `App.js` and link to it from `index.html`. Put the following in that file:
+
+```js
+var App = React.createClass({
+  getInitialState: function() {
+    return {
+      showLobby: false,
+      showRoom: false
+    };
+  },
+  componentDidMount: function() {
+    reactApp.setState({showLobby: true});
+  },
+  render: function() {
+    return (
+      <div>
+        <LobbyControls showLobby={this.state.showLobby} />
+      </div>
+    );
+  }
+});
+```
+
+Replace `<LobbyControls />` in the script at the bottom of `index.html` with `<App />`.
+
+You can see in the above code, we're doing some setup by plumbing a variable into LobbyControls (that we aren't utilising in that component, yet) to say whether that component should be displayed. When our app intialises, our two state variables are false. When the component has compiled (componentDidMount) we set the lobby state variable to true.
+
+#### Adding a room component
+
+Create a new component file called `Room.js` and link to it from `index.html`. Put the following in that file:
+
+```js
+var Room = React.createClass({
+  render: function() {
+    var roomClass = "";
+
+    if (!this.props.showRoom) {
+      roomClass = "hidden";
+    }
+
+    return (
+      <div className={roomClass}>
+
+        <h2>Room:</h2>
+
+      </div>
+    );
+  }
+});
+```
+
+There is some JavaScript code in the render method to work out if we should add a class of `hidden` to the div (the styling is already set up for this class in `main.css`), based on data passed down from the App component.
+
+Add a `<Room />` tag into the render method of the App component, underneath the LobbyControls one, and pass it that data by passing in the showRoom state variable:
+
+```js
+<Room showRoom={this.state.showRoom} />
+<LobbyControls showLobby={this.state.showLobby} />
+```
+
+Note that on the App component we're using state, which is mutable, whereas in Room we're using props (which is set up automatically from state) because the variable should be immutable within this component.
+
+#### Showing the room component when it is created
+
+We need to add something to our server side application to make it communicate back to our client side application when a room is created. In `app.js` (the server-side one!) add a line to the bottom of the new room function:
+
+```js
+io.to(socket.id).emit('join room', newRoom);
+```
+
+This will send a message back to the particular user that triggered the event only - we don't want to put everyone into the room! We send a signal back to the client side, with the room details along with it.
+
+On the client side, we need a place to catch these signals. This must be code that is set up from the start of the application being intialised, so let's add it to `componentDidMount` in `App.js`:
+
+```js
+componentDidMount: function() {
+  var reactApp = this;
+
+  socket.on('join room', function(roomData){
+    if (roomData && roomData.active) {
+      reactApp.setState({
+        showLobby: false,
+        showRoom: true,
+        roomId: roomData.hash
+      });
+    }
+  });
+
+  reactApp.setState({showLobby: true});
+},
+```
+
+Note that we have to set up a variable called reactApp so we can refer to react's methods for App.
+
+Now when we restart the server and refresh the page, when we click create room we should be shown the room component.
+
+#### Hiding the lobby
+
+```js
+var LobbyControls = React.createClass({
+  render: function() {
+    var lobbyClass = "";
+
+    if (!this.props.showLobby) {
+      lobbyClass = "hidden";
+    }
+
+    return (
+      <div className={lobbyClass}>
+        <h2>You are not in a room</h2>
+```
+
+#### Passing data in to the room
+
+`App.js`
+
+```js
+<Room showRoom={this.state.showRoom} roomId={this.state.roomId} />
+```
+
+`Room.js`
+
+```js
+<h2>Room: {this.props.roomId}</h2>
+```
+
 ### Letting others join the room
 
 #### via lobby
 
 #### via url
+
+#### if they get the hash wrong
 
 ### Setting a question and answers
 

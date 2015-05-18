@@ -45,5 +45,6 @@ io.on('connection', function(socket){
     socket.join(hash);
 
     console.log('room created', newRoom);
+    io.to(socket.id).emit('join room', newRoom);
   });
 });
