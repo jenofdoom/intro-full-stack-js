@@ -17,7 +17,10 @@
     <script src="components/socket.io-client/socket.io.js"></script>
     <script src="components/Chart.js/Chart.min.js"></script>
     <script src="javascripts/LobbyControls.js" type="text/jsx"></script>
+    <script src="javascripts/CreateNew.js" type="text/jsx"></script>
     <script type="text/jsx">
+    var socket = io();
+    
     React.render(
       <LobbyControls />,
       document.getElementById('content')

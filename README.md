@@ -138,6 +138,116 @@ When you refresh the page you should see the elements being rendered.
 
 ### Creating a room
 
+Let's make that bottom button do something. First we need to make a control to trigger the room creation, and then we need to actually make the room on the server side.
+
+#### Adding the create room button
+
+We'll make the button into its own component, so if we wanted we could use it elsewhere in our application. Make a new file in `public/javascripts` called `CreateNew.js` and link to it from the bottom of `index.html`, like you did with the last component. Give it the following contents:
+
+```js
+var CreateNew = React.createClass({
+  onClick: function() {
+    console.log('clicked');
+  },
+  render: function() {
+    return (
+      <button className="newRoom" type="button" onClick={this.onClick}>Create</button>
+    );
+  }
+});
+```
+
+So far, that hasn't changed anything. We need to include our new component - we can plug it directly into our `LobbyControls` component. Alter `LobbyControls.js` so that the new component is referenced like so:
+
+```html
+<p>Or create a new one:</p>
+<CreateNew />
+```
+
+When you click the button you should get a `clicked` message in the console.
+
+#### Actually creating the room
+
+In our `OnClick` method in `CreateNew` we want to replace the console.log statement with some socket.io code to communicate via a socket to the backend. First, let's add a better way of referencing the socket.io library to the top of the script block we have in `index.html`:
+
+```js
+<script type="text/jsx">
+var socket = io();
+
+React.render(
+  etc...
+```
+
+Now in `CreateNew.js`, replace the `console.log('clicked');` line:
+
+```js
+socket.emit('new room');
+```
+
+Great, now we're sending a signal via a socket... but the backend isn't doing anything with it yet. In `app.js`, **inside** our `io.on('connection', function(socket){` function, we want to create a new `socket.on` function (like our disconnect one):
+
+```js
+socket.on('new room', function(){
+  console.log('room created');
+});
+```
+
+Now (after restarting the node server, remember) whenever you click the button you should get a message in the server output.
+
+How are we actually going to store information about the rooms so that other users can access it too? In real life we'd probably want to write out to a database, but for this we'll just create an array of rooms on the server. The downside is that every time we restart the server we'll lose our rooms (and it won't scale nicely for thousands of rooms), but neither of those things matter very much right now.
+
+In `app.js`, create a variable at the application level so all our later code can referfence it - add the following line **before** `io.on('connection', function(socket){`
+
+```js
+var rooms = [];
+```
+
+Now we can alter our new room function in `app.js` to actually write something into this array:
+
+```js
+socket.on('new room', function(){
+  var id = rooms.length;
+  var newRoom = {
+    "id": id,
+    "owner": socket.id,
+    "active": true,
+    "question": null,
+    "answers": null
+  };
+
+  rooms.push(newRoom);
+
+  console.log('room created', newRoom);
+});
+```
+
+Notice that we're giving each room a unique ID based on its position in the array (this is assuming we never remove old rooms from our array, we just mark them as no longer active).
+
+Numeric values aren't a very nice way of referring to rooms, perhaps we can replace them with a hash instead. To do so we'll use another npm package called [hashids](https://www.npmjs.com/package/hashids). We can include hashids (which already got installed via our npm install before we started) in our `app.js` file by adding the following at the top of the file where we set up the other libraries:
+
+```js
+var Hashids = require("hashids"),
+    hashPadding = 10000,
+    hashids = new Hashids("my random text goes here change this if you like");
+```
+
+The padding is just to make the hashed value a bit longer. Now we can modify our new room setup to use the hashes:
+
+```js
+var id = rooms.length;
+var hash = hashids.encode(id + hashPadding);
+var newRoom = {
+  "id": id,
+  "hash": hash,
+etc...
+```
+
+We also need to make it so that while the application is running, users that are in the same room have a way of communicating without sending signals to users that *aren't* in the room. Add the following line above the console.log in the new room function:
+
+```js
+socket.join(hash);
+```
+
 ### Displaying the new room
 
 ### Letting others join the room
