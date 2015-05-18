@@ -45,6 +45,14 @@ var App = React.createClass({
       }
     });
 
+    socket.on('vote', function(roomData){
+      if (roomData.hash === reactApp.state.roomId) {
+        reactApp.setState({
+          answers: roomData.answers
+        });
+      }
+    });
+
     // try to join/create room via url hash on init
     if (initialUrl) {
       socket.emit('join room', initialUrl);

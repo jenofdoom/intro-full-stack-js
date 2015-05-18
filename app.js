@@ -75,4 +75,15 @@ io.on('connection', function(socket){
       io.to(hash).emit('set question', room.hash, room.question, room.answers);
     }
   });
+
+  socket.on('vote', function(answer, hash) {
+    var id = hashids.decode(hash) - hashPadding;
+    var room = rooms[id];
+
+    if (room && (room.answers.hasOwnProperty(answer))) {
+      console.log('vote for ' + answer + ' in ' + room.hash);
+      room.answers[answer] = room.answers[answer] + 1;
+      io.to(hash).emit('vote', room);
+    }
+  });
 });

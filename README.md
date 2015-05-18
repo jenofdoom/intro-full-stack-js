@@ -847,6 +847,46 @@ returnToLobby: function () {
 
 ### Letting people vote
 
+Currently the answer buttons do nothing when clicked. Let's wire them up. Add `onClick={this.vote}` to the `<button>` tag in `Room.js`, then create a method called `vote`:
+
+```js
+vote: function(event) {
+  socket.emit('vote', event.target.value, this.props.roomId);
+},
+```
+
+Note that we have to do a bit of fishing around in the event to find out which button was clicked. We could have instead of set up a separate method for each button, but this is more flexible.
+
+On the server side, we need to accept the `vote` event and add it to the data for that room.
+
+`app.js`:
+```js
+socket.on('vote', function(answer, hash) {
+  var id = hashids.decode(hash) - hashPadding;
+  var room = rooms[id];
+
+  if (room && (room.answers.hasOwnProperty(answer))) {
+    room.answers[answer] = room.answers[answer] + 1;
+    console.log('vote for ' + answer + ' in ' + room.hash);
+    io.to(hash).emit('vote', room);
+  }
+});
+```
+
+On the client side, again we need to set up a listener in `App.js`'s `componentDidMount`:
+
+```js
+socket.on('vote', function(roomData){
+  if (roomData.hash === reactApp.state.roomId) {
+    reactApp.setState({
+      answers: roomData.answers
+    });
+  }
+});
+```
+
+In this fashion the answers totals are propagated down via the state to the Room.
+
 ### Displaying the vote results
 
 ## Ways in which we could expand our application

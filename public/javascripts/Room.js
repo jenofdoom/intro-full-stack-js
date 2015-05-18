@@ -3,6 +3,9 @@ var Room = React.createClass({
     // pass up callback to parent
     this.props.returnToLobby();
   },
+  vote: function(event) {
+    socket.emit('vote', event.target.value, this.props.roomId);
+  },
   render: function() {
     var roomClass = "";
     var answers = [];
@@ -12,7 +15,7 @@ var Room = React.createClass({
       for(var key in this.props.answers) {
         if (this.props.answers.hasOwnProperty(key)) {
           answers.push(
-            <button key={key} value={key}>
+            <button key={key} value={key} onClick={this.vote}>
               {key}
             </button>
           );
