@@ -47,4 +47,15 @@ io.on('connection', function(socket){
     console.log('room created', newRoom);
     io.to(socket.id).emit('join room', newRoom);
   });
+
+  socket.on('join room', function(hash){
+    var id = hashids.decode(hash) - hashPadding;
+    var result = rooms[id];
+
+    // subscribe to the room
+    socket.join(hash);
+
+    // only for the particular user that caused the event
+    io.to(socket.id).emit('join room', result);
+  });
 });

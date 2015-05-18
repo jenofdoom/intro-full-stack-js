@@ -368,25 +368,148 @@ var LobbyControls = React.createClass({
 
 #### Passing data in to the room
 
-`App.js`
-
+`App.js`:
 ```js
 <Room showRoom={this.state.showRoom} roomId={this.state.roomId} />
 ```
 
-`Room.js`
-
+`Room.js`:
 ```js
 <h2>Room: {this.props.roomId}</h2>
 ```
 
 ### Letting others join the room
 
+It's no good having a room if others can't join it!
+
 #### via lobby
+
+Let's build out the controls to join a room in the lobby. Create a new component file called `JoinExisting.js` and link to it from `index.html`. Don't forget to add your new component into the render method in `LobbyControls.js`. Put the following into `JoinExisting.js`:
+
+```js
+var JoinExisting = React.createClass({
+  handleSubmit: function(event) {
+
+  },
+  render: function() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <label>Room code: <input ref="code" autoComplete="off" /></label>
+        <button>Connect</button>
+      </form>
+    );
+  }
+});
+```
+Here we create a form with a submit action that will trigger the `handleSubmit` method on JoinExisting. Now we can add some code to that method:
+
+```js
+event.preventDefault();
+var hash = React.findDOMNode(this.refs.code).value.trim();
+if (hash) {
+  socket.emit('join room', hash);
+  React.findDOMNode(this.refs.code).value = '';
+}
+```
+
+First we prevent the form submit from doing a POST and refreshing the page. Then we fish the user provided value out of the form using findDOMNode on the form element's ref attribute. If it's set, we send a message to the backend and reset the value to empty.
+
+##### Handling the join room message
+
+On the backend, we need to set up a listener for the `join room` signal. In `app.js`, below our new room function, add in the following:
+
+```js
+socket.on('join room', function(hash){
+  var id = hashids.decode(hash) - hashPadding;
+  var result = rooms[id];
+
+  socket.join(hash);
+
+  io.to(socket.id).emit('join room', result);
+});
+```
+
+On the client side, everything should already be taken care of, because we're reusing the same join room signal.
 
 #### via url
 
+It would be nice to be able to be able to jump straight to a particular room by just entering a url to it directly. This is quite easy with html5push state. When we join a room, we should push the state, like so:
+
+`App.js`, in `componentDidMount`'s `join room`:
+```js
+window.history.pushState(
+  {"room": roomData.hash},
+  "Room " + roomData.hash,
+  roomData.hash
+);
+```
+
+When the page loads, if there is a hash already set in the url we should treat it as if the user tried to enter that room.
+
+`App.js`, replace the line `reactApp.setState({showLobby: true});` in `componentDidMount`:
+```js
+var initialUrl = document.location.pathname.substring(1); // remove preceeding /
+
+if (initialUrl) {
+  socket.emit('join room', initialUrl);
+} else {
+  reactApp.setState({showLobby: true});
+}
+```
+
+We also need to reset the url when the user goes back to the lobby, but we don't have a way of going back to the lobby yet so we'll worry about that later!
+
 #### if they get the hash wrong
+
+If the user tries to look up a room that doesn't exist, nothing will happen. We should have a nicer error message than that. Let's make a component to display instead of the lobby when there is no room found.
+
+Create a new component file called `NoRoom.js` and link to it from `index.html`, with the following contents:
+
+```js
+var NoRoom = React.createClass({
+  render: function() {
+    var noRoomClass = "";
+    if (!this.props.showNoRoom) {
+      noRoomClass = "hidden";
+    }
+    return (
+      <div className={noRoomClass}>
+        <p>This room does not exist.</p>
+      </div>
+    );
+  }
+});
+```
+
+Now we need to add this component to `App.js`, and set some initial state so it is not shown until we need it.
+
+```js
+getInitialState: function() {
+  return {
+    showLobby: false,
+    showNoRoom: false,
+    showRoom: false
+  };
+},
+```
+
+```js
+<LobbyControls showLobby={this.state.showLobby}/>
+<NoRoom showNoRoom={this.state.showNoRoom} />
+```
+
+We also need to alter the join room function in `App.js`, so that the `if (roomData && roomData.active) {` clause now has an else block:
+
+```js
+if (roomData && roomData.active) {
+  ...etc...
+} else {
+  reactApp.setState({
+    showLobby: false,
+    showNoRoom: true
+  });
+}
+```
 
 ### Setting a question and answers
 
