@@ -28,6 +28,11 @@ var App = React.createClass({
           "Room " + roomData.hash,
           roomData.hash
         );
+
+        if (roomData.answers) {
+          reactApp.chartAddColumns(roomData.answers);
+        }
+
       } else {
         reactApp.setState({
           showLobby: false,
@@ -42,6 +47,10 @@ var App = React.createClass({
           question: question,
           answers: answers
         });
+
+        // clear the chart and repopulate
+        reactApp.chartClear();
+        reactApp.chartAddColumns(answers);
       }
     });
 
@@ -50,6 +59,9 @@ var App = React.createClass({
         reactApp.setState({
           answers: roomData.answers
         });
+
+        // iterate though chart & update values as necessary
+        reactApp.chartUpdate(roomData.answers);
       }
     });
 
@@ -59,6 +71,33 @@ var App = React.createClass({
     } else {
       reactApp.setState({showLobby: true});
     }
+  },
+  chartAddColumns: function(answers) {
+    for(var key in answers) {
+      if (answers.hasOwnProperty(key)) {
+        // add the chart data
+        answerChart.addData([answers[key]], key);
+      }
+    }
+  },
+  chartClear: function() {
+    var oldData = answerChart.datasets[0].bars.length;
+    var loop = 0;
+    while (loop < oldData) {
+      loop = loop + 1;
+      // have to loop because it only removes one column
+      answerChart.removeData();
+    }
+  },
+  chartUpdate: function(answers) {
+    answerChart.datasets[0].bars.forEach(function(element) {
+
+      // make sure answers[element.label] exists before trying to update
+      if (answers.hasOwnProperty(element.label) && (answers[element.label] != element.value)) {
+        element.value = answers[element.label];
+        answerChart.update();
+      }
+    });
   },
   returnToLobby: function() {
     window.history.pushState({"room": null}, "Home", "/");
@@ -73,6 +112,9 @@ var App = React.createClass({
       question: null,
       answers: null
     });
+
+    // scrap any existing data in the chart
+    this.chartClear();
   },
   render: function() {
     return (

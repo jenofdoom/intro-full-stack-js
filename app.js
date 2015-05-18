@@ -81,7 +81,6 @@ io.on('connection', function(socket){
     var room = rooms[id];
 
     if (room && (room.answers.hasOwnProperty(answer))) {
-      console.log('vote for ' + answer + ' in ' + room.hash);
       room.answers[answer] = room.answers[answer] + 1;
       io.to(hash).emit('vote', room);
     }

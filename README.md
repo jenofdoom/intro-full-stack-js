@@ -889,12 +889,135 @@ In this fashion the answers totals are propagated down via the state to the Room
 
 ### Displaying the vote results
 
+Finally, let's display our results as a graph. We could build a react component to wrap our Chart.js graph, but because it's fairly easy to isolate we'll initialise it seperately and communicate with it bu using some method that we'll set up on the react `App`.
+
+First, let's create a container in `index.html`, underneath out content div:
+
+```html
+<div id="content"></div>
+
+<div id="results">
+  <canvas id="answerChart" width="300" height="200"></canvas>
+</div>
+```
+
+In an ideal world we'd place our chart inside the room component, but unfortunately Chart.js seems to have a bug whereby if you put it in a container that initially has no height, it gets stuck as being 0 high. Not very useful. Putting our chart at the bottom doesn't make too much practical difference, because it's blank whenever it doesn't have data. Let's initialise it with no data now, by adding to the script block at the bottom of `index.html`:
+
+```js
+<script type="text/jsx">
+var socket = io();
+var chartElement = document.getElementById("answerChart").getContext("2d");
+var chartData = {
+    labels: [],
+    datasets: [
+        {
+            fillColor: "#666666",
+            data: []
+        }
+    ]
+};
+```
+
+Now let's add those methods to `App.js` - there are three things that we are going to need to be able to do to the chart.
+
+The first thing we need to be able to do is add columns of data:
+
+```js
+chartAddColumns: function(answers) {
+  for(var key in answers) {
+    if (answers.hasOwnProperty(key)) {
+      answerChart.addData([answers[key]], key);
+    }
+  }
+},
+```
+
+The second thing is we need to be able to do is totally clear the chart (when e.g. switching rooms or changing a question):
+
+```js
+chartClear: function() {
+  var oldData = answerChart.datasets[0].bars.length;
+  var loop = 0;
+  while (loop < oldData) {
+    loop = loop + 1;
+    answerChart.removeData();
+  }
+},
+```
+
+We have to do a loop because the `removeData` method only removes the leftmost column.
+
+Finally, we want to be able to dynamically update existing columns of data when a vote is placed:
+
+```js
+chartUpdate: function(answers) {
+  answerChart.datasets[0].bars.forEach(function(element) {
+    if (answers.hasOwnProperty(element.label) && (answers[element.label] != element.value)) {
+      element.value = answers[element.label];
+      answerChart.update();
+    }
+  });
+},
+```
+
+Now our methods are set up, we can call them at the appropriate times.
+
+`join room` in `componentDidMount`:
+```js
+if (roomData.answers) {
+  reactApp.chartAddColumns(roomData.answers);
+}
+```
+
+`set question` in `componentDidMount`:
+```js
+reactApp.chartClear();
+reactApp.chartAddColumns(answers);
+```
+
+`vote` in `componentDidMount`:
+```js
+reactApp.chartUpdate(roomData.answers);
+```
+
+`returnToLobby` in `App`:
+```js
+this.chartClear();
+```
+
+That's it!
+
 ## Ways in which we could expand our application
+
+### Features we could add
+
+Here are some ideas for ways in which you could expand the application. Some of these are quite easy and others would require a bit more planning:
+
+* Mark a room as inactive when the owner disconnects - tell the users of that room it has gone down
+* Make it so that more than two possible answers can be added
+* Store a cookie or some data in localStorage so the user gets a warning if they try and vote more than once (this is to prevent accidental voting, it's not going to be secure)
+* Add some actual error messages when a user tries to do things like add a question when they haven't yet supplied any answer options
 
 ### How we'd build this in real life
 
+This is definitely a demo application - what would we have to do to make it properly useable?
+
 #### Serving it properly
+
+The main thing, of course, is that we are currently just serving the application locally on port 3000. For a 'real' site, we'd want some proper hosting space, plus we'd ant to be serving on port 80. Node.js is not appropriate for serving on this low level secure port, for security reasons. So what we should do instead is use a websever like Apache to do port forwarding from port 3000 to 80.
 
 #### Using a database, garbage collection
 
-### Features we could add
+Rather that keeping all of our room data in an array, we'd want to write out to a proper database. A lightweight noSql database like MongoDB or similar might work well for this simple structure. Storing our data in a database would enable us to do fancier things like owners reconnecting to rooms after they've disconnected (in conjunction with some authentication, of course) but this might not be desirable.
+
+What *would* be desirable would be a periodic tidyup of old inactive rooms, otherwise the data will just grow and grow.
+
+#### Making the JS production ready
+
+We should consider adding some unit tests to ensure that our application behaves as we want it to, especially as we add or alter features.
+
+We should switch from using the react client side JSX transformer to a build process instead, using either the react command line tools, or another build management tool like gulp. We should also minify and concatenate all of our client side JS files.
+
+## Caveats
+
+React is a fast moving framework and this was my first time using it - what's here works, but it may not continue to do so as react changes. As it is a young framework "best practice" is still a bit nebulous, not everything depicted here is necessarily the "best" way of achieving a thing.

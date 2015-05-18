@@ -12,6 +12,10 @@
 
     <div id="content"></div>
 
+    <div id="results">
+      <canvas id="answerChart" width="300" height="200"></canvas>
+    </div>
+
     <script src="components/react/react.js"></script>
     <script src="components/react/JSXTransformer.js"></script>
     <script src="components/socket.io-client/socket.io.js"></script>
@@ -26,6 +30,19 @@
     <script src="javascripts/ReturnToLobby.js" type="text/jsx"></script>
     <script type="text/jsx">
     var socket = io();
+    var chartElement = document.getElementById("answerChart").getContext("2d");
+    var chartData = {
+        labels: [],
+        datasets: [
+            {
+                fillColor: "#666666",
+                data: []
+            }
+        ]
+    };
+    var answerChart = new Chart(chartElement).Bar(chartData, {
+      responsive: true
+    });
 
     React.render(
       <App />,
