@@ -513,7 +513,261 @@ if (roomData && roomData.active) {
 
 ### Setting a question and answers
 
-#### Re-setting it
+Of course it's no good having a room if we can't do anything in it. The user who started the room is the room owner. They should have some special controls for setting a question and the answers to go along with it.
+
+#### Figuring out is a user is the room owner
+
+We need the backed to validate if a user is an owner. Let's modify our `join room` signals on the backend to pass back that information. In `app.js`, modify the `join room` and `new room` functions:
+
+```js
+socket.on('new room', function(){
+  var id = rooms.length;
+  var hash = hashids.encode(id + hashPadding);
+  var newRoom = {
+    "id": id,
+    "hash": hash,
+    "owner": socket.id,
+    "active": true,
+    "question": null,
+    "answers": null
+  };
+
+  rooms.push(newRoom);
+  socket.join(hash);
+  io.to(socket.id).emit('join room', newRoom, true);
+});
+
+socket.on('join room', function(hash){
+  var id = hashids.decode(hash) - hashPadding;
+  var result = rooms[id];
+  var isOwner = false;
+
+  if (result && (result.owner === socket.id)) {
+    isOwner = true;
+  }
+  socket.join(hash);
+  io.to(socket.id).emit('join room', result, isOwner);
+});
+```
+
+Now in the corresponding `join room` function in `App.js` on the client side, we can pick up the new parameter and put it in the state:
+
+```js
+socket.on('join room', function(roomData, isOwner){
+  if (roomData && roomData.active) {
+    reactApp.setState({
+      showLobby: false,
+      showRoom: true,
+      roomId: roomData.hash,
+      roomOwner: isOwner
+    });
+  etc...
+```
+
+We should then pass this down to the room component:
+
+```js
+<Room showRoom={this.state.showRoom} roomId={this.state.roomId} isOwner={this.state.roomOwner} />
+```
+
+In `Room.js` we want to add a new component that we will hand off the roomOwner state to, under the h2:
+
+```js
+<OwnerControls isOwner={this.props.isOwner} roomId={this.props.roomId} />
+```
+
+#### Showing the room controls
+
+Create a new component file called `OwnerControls.js` and link to it from `index.html`, with the following contents:
+
+```js
+var OwnerControls = React.createClass({
+  getInitialState: function() {
+    return {
+      controlsOn: true
+    };
+  },
+  handleSubmit: function(event) {
+    event.preventDefault();
+    this.setState({
+      controlsOn: false
+    });
+  },
+  toggleControls: function(event) {
+    event.preventDefault();
+    this.setState({
+      controlsOn: true
+    });
+  },
+  render: function() {
+    var ownerClass, toggleClass, controlsClass = "";
+
+    if (!this.props.isOwner) {
+      ownerClass = "hidden";
+    }
+
+    if (this.state.controlsOn) {
+      toggleClass = "hidden";
+    } else {
+      controlsClass = "hidden";
+    }
+
+    return (
+      <div className={ownerClass}>
+        <p>
+          You are the owner of this room. <a className={toggleClass} href="#" onClick={this.toggleControls}>Set question.</a>
+        </p>
+
+        <div className={controlsClass}>
+
+          <form onSubmit={this.handleSubmit}>
+            <label>Question: <input ref="question" autoComplete="off" /></label>
+
+            <fieldset>
+              <legend>Answer options:</legend>
+
+              <label>
+                Answer: <input autoComplete="off" ref="answerOption-1" />
+              </label>
+
+              <label>
+                Answer: <input autoComplete="off" ref="answerOption-2" />
+              </label>
+
+            </fieldset>
+
+            <button>Set</button>
+          </form>
+        </div>
+
+      </div>
+    );
+  }
+});
+```
+
+This set up the controls. They will display when you are the owner of a room you are viewing. They hide themselves when the set button is pressed. They can be shown again by clicking on a link.
+
+#### Passing the server the question and answers
+
+As yet nothing much happens on pressing the button  - let's add some code to the `handleSubmit` method:
+
+```js
+handleSubmit: function(event) {
+  event.preventDefault();
+  var question = React.findDOMNode(this.refs.question).value.trim();
+
+  if (question) {
+    var answer1 = React.findDOMNode(this.refs.answerOption1).value.trim();
+    var answer2 = React.findDOMNode(this.refs.answerOption1).value.trim();
+    var data = {"question": question, answers: {}};
+
+    if (answer1 && answer2 && (answer1 !== answer2)) {
+      data.answers[answer1] = 0;
+      data.answers[answer2] = 0;
+
+      socket.emit('set question', data, this.props.roomId);
+
+      React.findDOMNode(this.refs.question).value = '';
+      React.findDOMNode(this.refs.answerOption1).value = '';
+      React.findDOMNode(this.refs.answerOption2).value = '';
+
+      this.setState({
+        controlsOn: false
+      });
+    }
+  }
+},
+```
+
+Now we need to catch `set question` on the server and handle it.
+
+#### Setting the question and answers
+
+In the server file `app.js`, add another listener function:
+
+```js
+socket.on('set question', function(data, hash){
+  var id = hashids.decode(hash) - hashPadding;
+  var room = rooms[id];
+
+  if (room && (room.owner === socket.id)) {
+    room.question = data.question;
+    room.answers = data.answers;
+
+    io.to(hash).emit('set question', room.hash, room.question, room.answers);
+  }
+});
+```
+
+In the client side `App.js`, add another function in `componentDidMount`:
+
+```js
+socket.on('set question', function(roomId, question, answers){
+  if (roomId === reactApp.state.roomId) {
+    reactApp.setState({
+      question: question,
+      answers: answers
+    });
+  }
+});
+```
+
+We also need to modify the `join room` setState object so that when we're joining a room we pull out any existing set question and answers:
+
+```js
+socket.on('join room', function(roomData, isOwner){
+  if (roomData && roomData.active) {
+    reactApp.setState({
+      showLobby: false,
+      showRoom: true,
+      roomId: roomData.hash,
+      roomOwner: isOwner,
+      question: roomData.question,
+      answers: roomData.answers
+    });
+```
+
+We need to pass this data down to the Room component, and while we're at it let's add a placeholder for when a question hasn't yet been set:
+
+```js
+<Room showRoom={this.state.showRoom} roomId={this.state.roomId} isOwner={this.state.roomOwner} question={this.state.question} answers={this.state.answers} noQuestion="A question has not yet been set" />
+```
+
+We should reflect this new information in `Room.js`. In the JavaScript before the return statement we want to do a bit of setup:
+
+```js
+var answers = [];
+var question = this.props.question ? this.props.question : this.props.noQuestion;
+
+if (this.props.answers) {
+  for(var key in this.props.answers) {
+    if (this.props.answers.hasOwnProperty(key)) {
+      answers.push(
+        <button key={key} value={key}>
+          {key}
+        </button>
+      );
+    }
+  }
+}
+```
+
+In the return statement itself we want to add the following JSX:
+
+```js
+<h3>{question}</h3>
+
+<div className="answers">{answers}</div>
+```
+
+You might also wish to add a smidge of css to `main.css` to space the buttons out better:
+
+```css
+.answers button {
+  margin-right:10px;
+}
+```
 
 ### Going back to the lobby
 

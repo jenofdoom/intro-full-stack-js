@@ -44,18 +44,35 @@ io.on('connection', function(socket){
     // subscribe to the room
     socket.join(hash);
 
-    console.log('room created', newRoom);
-    io.to(socket.id).emit('join room', newRoom);
+    // only for the particular user that caused the event
+    io.to(socket.id).emit('join room', newRoom, true);
   });
 
   socket.on('join room', function(hash){
     var id = hashids.decode(hash) - hashPadding;
     var result = rooms[id];
+    var isOwner = false;
+
+    if (result && (result.owner === socket.id)) {
+      isOwner = true;
+    }
 
     // subscribe to the room
     socket.join(hash);
 
     // only for the particular user that caused the event
-    io.to(socket.id).emit('join room', result);
+    io.to(socket.id).emit('join room', result, isOwner);
+  });
+
+  socket.on('set question', function(data, hash){
+    var id = hashids.decode(hash) - hashPadding;
+    var room = rooms[id];
+
+    if (room && (room.owner === socket.id)) {
+      room.question = data.question;
+      room.answers = data.answers;
+
+      io.to(hash).emit('set question', room.hash, room.question, room.answers);
+    }
   });
 });
