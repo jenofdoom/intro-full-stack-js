@@ -11,6 +11,8 @@ var App = React.createClass({
     var initialUrl = document.location.pathname.substring(1); // remove preceeding /
 
     socket.on('join room', function(roomData, isOwner){
+      window.scrollTo(0, 0);
+
       if (roomData && roomData.active) {
         reactApp.setState({
           showLobby: false,
@@ -50,12 +52,26 @@ var App = React.createClass({
       reactApp.setState({showLobby: true});
     }
   },
+  returnToLobby: function() {
+    window.history.pushState({"room": null}, "Home", "/");
+    window.scrollTo(0, 0);
+
+    this.setState({
+      showLobby: true,
+      showNoRoom: false,
+      showRoom: false,
+      roomId: null,
+      isOwner: false,
+      question: null,
+      answers: null
+    });
+  },
   render: function() {
     return (
       <div>
-        <Room showRoom={this.state.showRoom} roomId={this.state.roomId} isOwner={this.state.roomOwner} question={this.state.question} answers={this.state.answers} noQuestion="A question has not yet been set" />
+        <Room showRoom={this.state.showRoom} roomId={this.state.roomId} isOwner={this.state.roomOwner} question={this.state.question} answers={this.state.answers} noQuestion="A question has not yet been set" returnToLobby={this.returnToLobby} />
         <LobbyControls showLobby={this.state.showLobby}/>
-        <NoRoom showNoRoom={this.state.showNoRoom} />
+        <NoRoom showNoRoom={this.state.showNoRoom} returnToLobby={this.returnToLobby} />
       </div>
     );
   }

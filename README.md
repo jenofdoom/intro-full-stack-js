@@ -771,7 +771,79 @@ You might also wish to add a smidge of css to `main.css` to space the buttons ou
 
 ### Going back to the lobby
 
-### Handling the room owner disconnecting (nice to have?)
+Right now it's kinda annoying to switch rooms. Let's add a button component, for returning to the lobby. We should put it in every room, and also on the no room page.
+
+Create a new component file called `ReturnToLobby.js` and link to it from `index.html`. Put the following in that file:
+
+```js
+var ReturnToLobby = React.createClass({
+  onClick: function() {
+    this.props.returnToLobby();
+  },
+  render: function() {
+    return (
+      <button className="home" type="button" onClick={this.onClick}>{this.props.text}</button>
+    );
+  }
+});
+```
+
+This seems fairly straightforwards, other than the fact that the onClick sets a property that is a function - what happens with that? It triggers a function on the parent component. Why does it need to do that? Because all of the interesting things we'd want to do to turn the lobby back on actually live in `App.js` - but in order to get back to that we're going to have to hop back up via all the intermediate steps.
+
+We haven't actually set up the parent yet, so let's do that now. We want to add the button into `Room.js`, before the h2 (this is also where we set up the text for the button):
+
+```js
+<ReturnToLobby text="Back to lobby" returnToLobby={this.returnToLobby} />
+```
+
+Let's also set up the function that the onClick triggered, by adding a `returnToLobby` method in `Room.js`:
+
+```js
+returnToLobby: function () {
+  // pass up callback to parent
+  this.props.returnToLobby();
+},
+```
+
+And finally in `App.js` we can set up a method to actually do the interesting things:
+
+```js
+returnToLobby: function() {
+  window.history.pushState({"room": null}, "Home", "/");
+  window.scrollTo(0, 0);
+
+  this.setState({
+    showLobby: true,
+    showNoRoom: false,
+    showRoom: false,
+    roomId: null,
+    isOwner: false,
+    question: null,
+    answers: null
+  });
+},
+```
+
+This is basically setting everything back to a neutral state. In order for this to work, though, there is one other thing that we need to do - make sure we pass this function down the chain for `Room` to act on - and let's do the same for `NoRoom` while we're here:
+
+```js
+<Room showRoom={this.state.showRoom} roomId={this.state.roomId} isOwner={this.state.roomOwner} question={this.state.question} answers={this.state.answers} noQuestion="A question has not yet been set" returnToLobby={this.returnToLobby} />
+<LobbyControls showLobby={this.state.showLobby}/>
+<NoRoom showNoRoom={this.state.showNoRoom} returnToLobby={this.returnToLobby} />
+```
+
+Plugging the button into `NoRoom` is as simple as adding the `returnToLobby` method there, as well as the component tag itself (this time with different text).
+
+```js
+returnToLobby: function () {
+  // pass up callback to parent
+  this.props.returnToLobby();
+},
+
+...etc...
+
+<ReturnToLobby text="Click on this button to return to the lobby" returnToLobby={this.returnToLobby} />
+```
 
 ### Letting people vote
 

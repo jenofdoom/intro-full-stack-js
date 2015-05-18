@@ -1,4 +1,8 @@
 var Room = React.createClass({
+  returnToLobby: function () {
+    // pass up callback to parent
+    this.props.returnToLobby();
+  },
   render: function() {
     var roomClass = "";
     var answers = [];
@@ -22,6 +26,8 @@ var Room = React.createClass({
 
     return (
       <div className={roomClass}>
+
+        <ReturnToLobby text="Back to lobby" returnToLobby={this.returnToLobby} />
 
         <h2>Room: {this.props.roomId}</h2>
 
