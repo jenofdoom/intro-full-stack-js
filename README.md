@@ -76,6 +76,26 @@ When you makes changes to `app.js` you will have to restart the server before th
 
 ### Communicating via sockets
 
+Socket.io lets us respond to immediately to events happening in users browsers. Each socket connection is one user's connection to the server. Each user has a unique socket ID, too. To start using socket.io we need to add the server side library (the client side library is already included in `index.html`) to our application - add the following line near the top of `app.js`, underneath the `var http = require('http').Server(app);` line:
+
+```js
+var io = require('socket.io')(http);
+```
+
+Let's log whenever a user connects to our server via a socket, by adding the following to the bottom of our `app.js` file:
+
+```js
+io.on('connection', function(socket){
+  console.log('a user connected, ' + io.engine.clientsCount + ' total user(s)');
+
+  socket.on('disconnect', function(){
+    console.log('a user disconnected, ' + io.engine.clientsCount + ' total user(s)');
+  });
+});
+```
+
+When you refresh the page, you should see a message about a user connecting. If you open the page in another tab or browser you should see the number of users go up to two. And every time you refresh the page from now on, you should get a message about a user disconnecting, then connecting again.
+
 ### Building our first react component
 
 ### Creating a room
