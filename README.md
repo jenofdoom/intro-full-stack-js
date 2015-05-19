@@ -265,7 +265,7 @@ var App = React.createClass({
     };
   },
   componentDidMount: function() {
-    reactApp.setState({showLobby: true});
+    this.setState({showLobby: true});
   },
   render: function() {
     return (
