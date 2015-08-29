@@ -45,7 +45,7 @@ And you're all set! We'll pick up from this point.
 
 ## Building the application
 
-We're going to build a classroom voting application. We'll be using JavaScript both on the server side (Node, Express, Socket.IO) and on the client side (React, Chart.js, and the Socket.IO client side library). There are git tags in this repo that can help you just between the steps if you are looking for a shortcut rather than writing everything yourself.
+We're going to build a classroom voting application. We'll be using JavaScript both on the server side (Node, Express, Socket.IO) and on the client side (React, Chart.js, and the Socket.IO client side library).
 
 The master branch of this repo is of the 'start point' for the tutorial. If you would like to see the finished version of the code then do `git checkout finished`. Feel free to have a look around (and you can run `node app.js` to see the running final application), but to work on the tutorial we want to jump back to the master branch using `git checkout master`.
 
