@@ -18,7 +18,7 @@
 
     <script src="components/react/react.js"></script>
     <script src="components/react/JSXTransformer.js"></script>
-    <script src="components/socket.io-client/socket.io.js"></script>
+    <script src="/components/socket.io-client/socket.io.js"></script> <!-- http://stackoverflow.com/a/9955254/160648 -->
     <script src="components/Chart.js/Chart.min.js"></script>
     <script src="javascripts/App.js" type="text/jsx"></script>
     <script src="javascripts/LobbyControls.js" type="text/jsx"></script>
@@ -29,7 +29,7 @@
     <script src="javascripts/NoRoom.js" type="text/jsx"></script>
     <script src="javascripts/ReturnToLobby.js" type="text/jsx"></script>
     <script type="text/jsx">
-    var socket = io();
+    var socket = io.connect();
     var chartElement = document.getElementById("answerChart").getContext("2d");
     var chartData = {
         labels: [],

@@ -183,10 +183,10 @@ In our `OnClick` method in `CreateNew` we want to replace the console.log statem
 
 ```js
 <script type="text/jsx">
-var socket = io();
+var socket = io.connect();
 
 React.render(
-  etc...
+  // ...etc...
 ```
 
 Now in `CreateNew.js`, replace the `console.log('clicked');` line:
@@ -915,7 +915,7 @@ returnToLobby: function () {
   this.props.returnToLobby();
 },
 
-...etc...
+// ...etc...
 
 <ReturnToLobby text="Click on this button to return to the lobby" returnToLobby={this.returnToLobby} />
 ```
@@ -984,7 +984,7 @@ In an ideal world we'd place our chart inside the room component, but unfortunat
 
 ```js
 <script type="text/jsx">
-var socket = io();
+var socket = io.connect();
 var chartElement = document.getElementById("answerChart").getContext("2d");
 var chartData = {
     labels: [],
