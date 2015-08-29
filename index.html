@@ -10,44 +10,9 @@
   <body>
     <h1>Voteatron</h1>
 
-    <div id="content"></div>
-
-    <div id="results">
-      <canvas id="answerChart" width="300" height="200"></canvas>
-    </div>
-
     <script src="components/react/react.js"></script>
     <script src="components/react/JSXTransformer.js"></script>
     <script src="/components/socket.io-client/socket.io.js"></script> <!-- http://stackoverflow.com/a/9955254/160648 -->
     <script src="components/Chart.js/Chart.min.js"></script>
-    <script src="javascripts/ReactApp.js" type="text/jsx"></script>
-    <script src="javascripts/LobbyControls.js" type="text/jsx"></script>
-    <script src="javascripts/CreateNew.js" type="text/jsx"></script>
-    <script src="javascripts/JoinExisting.js" type="text/jsx"></script>
-    <script src="javascripts/Room.js" type="text/jsx"></script>
-    <script src="javascripts/OwnerControls.js" type="text/jsx"></script>
-    <script src="javascripts/NoRoom.js" type="text/jsx"></script>
-    <script src="javascripts/ReturnToLobby.js" type="text/jsx"></script>
-    <script type="text/jsx">
-    var socket = io.connect();
-    var chartElement = document.getElementById("answerChart").getContext("2d");
-    var chartData = {
-        labels: [],
-        datasets: [
-            {
-                fillColor: "#666666",
-                data: []
-            }
-        ]
-    };
-    var answerChart = new Chart(chartElement).Bar(chartData, {
-      responsive: true
-    });
-
-    React.render(
-      <App />,
-      document.getElementById('content')
-    );
-    </script>
   </body>
 </html>
