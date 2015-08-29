@@ -1,23 +1,22 @@
-# javascript-masterclass
+# Introduction to Full Stack JS
+## Node.js, Socket.IO and React
 
-## Summer of Tech bootcamp
-
-During the masterclass we're going to be working on building a small application using Node, Express, Sockets.io, React and Chart.js
+During the tutorial we're going to be working on building a small classroom voting application using Node, Express, Sockets.io, React and Chart.js
 
 You will need to have at least a basic level of JavaScript in order to be able to participate - if you're not sure if you do, then work through [this tutorial](https://developer.mozilla.org/en-US/Learn/Getting_started_with_the_web/JavaScript_basics) to get up to speed first.
 
-## Before the masterclass
+## Before the tutorial
 
-If you'd like to follow along during the masterclass, there are a few things you'll need to set up in advance.
+If you'd like to follow along during the tutorial, there are a few things you'll need to set up in advance.
 
 ### Clone this repository
 
 If you have your own github account already, you might prefer to fork this repository and clone that instead. If you don't just run the following commands on a terminal or command line interface:
 
-    git clone https://github.com/jenofdoom/javascript-masterclass.git
-    cd javascript-masterclass
+    git clone https://github.com/jenofdoom/intro-full-stack-js.git
+    cd intro-full-stack-js
 
-If you don't already have git installed on your machine, the above won't work: you can either [install git](https://git-scm.com/downloads) or just grab the zip file of this project and unzip it.
+If you don't already have git installed on your machine, the above won't work: you can will need to [install git](https://git-scm.com/downloads) first.
 
 ### Install node, npm and bower
 
@@ -37,7 +36,7 @@ Once that's done, we can install [Bower](http://bower.io/) using npm. We want to
 
 Now we've got npm and bower set up, we can use the `package.json` and `bower.json` files that are already set up in the project to install all the other packages we are going to be using. Have a look at those two files to see what things we are grabbing.
 
-Run the following two commands (from inside the `javascript-masterclass` directory):
+Run the following two commands (from inside the `intro-full-stack-js` directory):
 
     npm install
     bower install
@@ -46,11 +45,15 @@ And you're all set! We'll pick up from this point.
 
 ## Building the application
 
-We're going to build a classroom voting application. We'll be using JavaScript both on the server side (node, express, socket.io) and on the client side (react, Chart.js, and the socket.io client side library). There are git tags in this repo that can help you just between the steps if you are looking for a shortcut rather than writing everything yourself.
+We're going to build a classroom voting application. We'll be using JavaScript both on the server side (Node, Express, Socket.IO) and on the client side (React, Chart.js, and the Socket.IO client side library). There are git tags in this repo that can help you just between the steps if you are looking for a shortcut rather than writing everything yourself.
+
+The git checkout is of the finished version of the code. Feel free to have a look around, but to work on the tutorial we want to jump to an earlier point in the code:
+
+    git checkout step-0
 
 ### Serving index.html
 
-(do `git checkout step-0` if you want to jump to this point)
+(if you didn't already, do `git checkout step-0` to jump to this point)
 
 We'll need a web server in order to serve our stub index.html file properly. Create a file called `app.js` in the root folder of the application with the following code:
 
@@ -247,7 +250,7 @@ var hash = hashids.encode(id + hashPadding);
 var newRoom = {
   "id": id,
   "hash": hash,
-etc...
+// ...etc...
 ```
 
 We also need to make it so that while the application is running, users that are in the same room have a way of communicating without sending signals to users that *aren't* in the room. Add the following line above the console.log in the new room function:
@@ -264,7 +267,23 @@ Now that we have more than just a lobby we want to show, it makes sense to repla
 
 #### Adding an app component
 
-Create a new component file called `App.js` and link to it from `index.html`. Put the following in that file:
+Create a new component file called `ReactApp.js` and link to it from `index.html`. Put the following in that file:
+
+```js
+var App = React.createClass({
+  render: function() {
+    return (
+      <div>
+        <LobbyControls />
+      </div>
+    );
+  }
+});
+```
+
+Replace `<LobbyControls />` in the script at the bottom of `index.html` with `<App />`. That should work just the same as it did before.
+
+We aren't going to want to show the lobby all the time though, so we are going to need to add a way of turning it on or off.
 
 ```js
 var App = React.createClass({
@@ -278,22 +297,49 @@ var App = React.createClass({
     this.setState({showLobby: true});
   },
   render: function() {
+    // ...etc...
+```
+
+You can see in the above code, we're doing some setup by plumbing a variable into LobbyControls (that we aren't utilising in that component, yet) to say whether that component should be displayed. When our app initialises, our two state variables are false. When the component has compiled (componentDidMount) we set the lobby state variable to true.
+
+We need to explicitly hand our new state variable down to the lobby component. Alter the `<LobbyControls />` in the render method so that it has an attribute which the variable is written out into (we could call this variable whatever we like but calling it the same thing is less confusing):
+
+```js
+<LobbyControls showLobby={this.state.showLobby} />
+```
+
+We aren't using that anywhere yet in the lobby component, but it won't matter until we need to be able to hide it.
+
+#### Adding a room component
+
+Create a new component file called `Room.js` and link to it from `index.html`. Put the following in that file:
+
+```js
+var Room = React.createClass({
+  render: function() {
     return (
       <div>
-        <LobbyControls showLobby={this.state.showLobby} />
+
+        <h2>Room:</h2>
+
       </div>
     );
   }
 });
 ```
 
-Replace `<LobbyControls />` in the script at the bottom of `index.html` with `<App />`.
+Add a `<Room />` tag into the render method of the App component, next to the LobbyControls one, and pass it the showRoom state variable:
 
-You can see in the above code, we're doing some setup by plumbing a variable into LobbyControls (that we aren't utilising in that component, yet) to say whether that component should be displayed. When our app intialises, our two state variables are false. When the component has compiled (componentDidMount) we set the lobby state variable to true.
+```js
+<div>
+  <Room showRoom={this.state.showRoom} />
+  <LobbyControls showLobby={this.state.showLobby} />
+</div>
+```
 
-#### Adding a room component
+Note that now there is more than one element we need to wrap them in a div for the render to be able to append them correctly.
 
-Create a new component file called `Room.js` and link to it from `index.html`. Put the following in that file:
+Now we need to use the showRoom variable to actually alter what gets rendered in the room component:
 
 ```js
 var Room = React.createClass({
@@ -317,13 +363,6 @@ var Room = React.createClass({
 
 There is some JavaScript code in the render method to work out if we should add a class of `hidden` to the div (the styling is already set up for this class in `main.css`), based on data passed down from the App component.
 
-Add a `<Room />` tag into the render method of the App component, underneath the LobbyControls one, and pass it that data by passing in the showRoom state variable:
-
-```js
-<Room showRoom={this.state.showRoom} />
-<LobbyControls showLobby={this.state.showLobby} />
-```
-
 Note that on the App component we're using state, which is mutable, whereas in Room we're using props (which is set up automatically from state) because the variable should be immutable within this component.
 
 #### Showing the room component when it is created
@@ -336,7 +375,7 @@ io.to(socket.id).emit('join room', newRoom);
 
 This will send a message back to the particular user that triggered the event only - we don't want to put everyone into the room! We send a signal back to the client side, with the room details along with it.
 
-On the client side, we need a place to catch these signals. This must be code that is set up from the start of the application being intialised, so let's add it to `componentDidMount` in `App.js`:
+On the client side, we need a place to catch these signals. This must be code that is set up from the start of the application being intialised, so let's add it to `componentDidMount` in `ReactApp.js`:
 
 ```js
 componentDidMount: function() {
@@ -356,7 +395,7 @@ componentDidMount: function() {
 },
 ```
 
-Note that we have to set up a variable called reactApp so we can refer to react's methods for App.
+Note that we have to set up a variable called `reactApp` so we can refer to react's methods within App (because within a `socket.on` function `this` will be redefined).
 
 Now when we restart the server and refresh the page, when we click create room we should be shown the room component.
 
@@ -378,7 +417,7 @@ var LobbyControls = React.createClass({
 
 #### Passing data in to the room
 
-`App.js`:
+`ReactApp.js`:
 ```js
 <Room showRoom={this.state.showRoom} roomId={this.state.roomId} />
 ```
@@ -447,7 +486,7 @@ On the client side, everything should already be taken care of, because we're re
 
 It would be nice to be able to be able to jump straight to a particular room by just entering a url to it directly. This is quite easy with html5push state. When we join a room, we should push the state, like so:
 
-`App.js`, in `componentDidMount`'s `join room`:
+`ReactApp.js`, in `componentDidMount`'s `join room`:
 ```js
 window.history.pushState(
   {"room": roomData.hash},
@@ -458,7 +497,7 @@ window.history.pushState(
 
 When the page loads, if there is a hash already set in the url we should treat it as if the user tried to enter that room.
 
-`App.js`, replace the line `reactApp.setState({showLobby: true});` in `componentDidMount`:
+`ReactApp.js`, replace the line `reactApp.setState({showLobby: true});` in `componentDidMount`:
 ```js
 var initialUrl = document.location.pathname.substring(1); // remove preceeding /
 
@@ -493,7 +532,7 @@ var NoRoom = React.createClass({
 });
 ```
 
-Now we need to add this component to `App.js`, and set some initial state so it is not shown until we need it.
+Now we need to add this component to `ReactApp.js`, and set some initial state so it is not shown until we need it.
 
 ```js
 getInitialState: function() {
@@ -505,16 +544,17 @@ getInitialState: function() {
 },
 ```
 
+And add our new component to the render method:
+
 ```js
-<LobbyControls showLobby={this.state.showLobby}/>
 <NoRoom showNoRoom={this.state.showNoRoom} />
 ```
 
-We also need to alter the join room function in `App.js`, so that the `if (roomData && roomData.active) {` clause now has an else block:
+We also need to alter the join room function in `ReactApp.js`, so that the `if (roomData && roomData.active) {` clause now has an else block:
 
 ```js
 if (roomData && roomData.active) {
-  ...etc...
+  // ...etc...
 } else {
   reactApp.setState({
     showLobby: false,
@@ -535,22 +575,11 @@ We need the backed to validate if a user is an owner. Let's modify our `join roo
 
 ```js
 socket.on('new room', function(){
-  var id = rooms.length;
-  var hash = hashids.encode(id + hashPadding);
-  var newRoom = {
-    "id": id,
-    "hash": hash,
-    "owner": socket.id,
-    "active": true,
-    "question": null,
-    "answers": null
-  };
-
-  rooms.push(newRoom);
-  socket.join(hash);
+  // ...etc...
   io.to(socket.id).emit('join room', newRoom, true);
 });
-
+```
+```js
 socket.on('join room', function(hash){
   var id = hashids.decode(hash) - hashPadding;
   var result = rooms[id];
@@ -564,7 +593,7 @@ socket.on('join room', function(hash){
 });
 ```
 
-Now in the corresponding `join room` function in `App.js` on the client side, we can pick up the new parameter and put it in the state:
+Now in the corresponding `join room` function in `ReactApp.js` on the client side, we can pick up the new parameter and put it in the state:
 
 ```js
 socket.on('join room', function(roomData, isOwner){
@@ -575,19 +604,26 @@ socket.on('join room', function(roomData, isOwner){
       roomId: roomData.hash,
       roomOwner: isOwner
     });
-  etc...
+  // ...etc...
 ```
 
 We should then pass this down to the room component:
 
 ```js
-<Room showRoom={this.state.showRoom} roomId={this.state.roomId} isOwner={this.state.roomOwner} />
+<Room
+  showRoom={this.state.showRoom}
+  roomId={this.state.roomId}
+  isOwner={this.state.roomOwner}
+/>
 ```
 
 In `Room.js` we want to add a new component that we will hand off the roomOwner state to, under the h2:
 
 ```js
-<OwnerControls isOwner={this.props.isOwner} roomId={this.props.roomId} />
+<OwnerControls
+  isOwner={this.props.isOwner}
+  roomId={this.props.roomId}
+/>
 ```
 
 #### Showing the room controls
@@ -596,21 +632,69 @@ Create a new component file called `OwnerControls.js` and link to it from `index
 
 ```js
 var OwnerControls = React.createClass({
+  handleSubmit: function(event) {
+    event.preventDefault();
+  },
+  render: function() {
+    var ownerClass = "";
+
+    if (!this.props.isOwner) {
+      ownerClass = "hidden";
+    }
+
+    return (
+      <div className={ownerClass}>
+        <p>
+          You are the owner of this room.
+        </p>
+
+        <div>
+
+          <form onSubmit={this.handleSubmit}>
+            <label>Question: <input ref="question" autoComplete="off" /></label>
+
+            <fieldset>
+              <legend>Answer options:</legend>
+
+              <label>
+                Answer: <input autoComplete="off" ref="answerOption1" />
+              </label>
+
+              <label>
+                Answer: <input autoComplete="off" ref="answerOption2" />
+              </label>
+
+            </fieldset>
+
+            <button>Set</button>
+          </form>
+        </div>
+
+      </div>
+    );
+  }
+});
+```
+
+This sets up the controls. They will display when you are the owner of a room you are viewing. Let's alter the component so the controls hide themselves when the set button is pressed. They can be shown again by clicking on a link:
+
+```js
+var OwnerControls = React.createClass({
   getInitialState: function() {
     return {
       controlsOn: true
     };
   },
-  handleSubmit: function(event) {
-    event.preventDefault();
-    this.setState({
-      controlsOn: false
-    });
-  },
   toggleControls: function(event) {
     event.preventDefault();
     this.setState({
       controlsOn: true
+    });
+  },
+  handleSubmit: function(event) {
+    event.preventDefault();
+    this.setState({
+      controlsOn: false
     });
   },
   render: function() {
@@ -634,33 +718,8 @@ var OwnerControls = React.createClass({
 
         <div className={controlsClass}>
 
-          <form onSubmit={this.handleSubmit}>
-            <label>Question: <input ref="question" autoComplete="off" /></label>
-
-            <fieldset>
-              <legend>Answer options:</legend>
-
-              <label>
-                Answer: <input autoComplete="off" ref="answerOption-1" />
-              </label>
-
-              <label>
-                Answer: <input autoComplete="off" ref="answerOption-2" />
-              </label>
-
-            </fieldset>
-
-            <button>Set</button>
-          </form>
-        </div>
-
-      </div>
-    );
-  }
-});
+        // ...etc...
 ```
-
-This set up the controls. They will display when you are the owner of a room you are viewing. They hide themselves when the set button is pressed. They can be shown again by clicking on a link.
 
 #### Passing the server the question and answers
 
@@ -714,7 +773,7 @@ socket.on('set question', function(data, hash){
 });
 ```
 
-In the client side `App.js`, add another function in `componentDidMount`:
+In the client side `ReactApp.js`, add another function in `componentDidMount`:
 
 ```js
 socket.on('set question', function(roomId, question, answers){
@@ -804,7 +863,7 @@ var ReturnToLobby = React.createClass({
 });
 ```
 
-This seems fairly straightforwards, other than the fact that the onClick sets a property that is a function - what happens with that? It triggers a function on the parent component. Why does it need to do that? Because all of the interesting things we'd want to do to turn the lobby back on actually live in `App.js` - but in order to get back to that we're going to have to hop back up via all the intermediate steps.
+This seems fairly straightforwards, other than the fact that the onClick sets a property that is a function - what happens with that? It triggers a function on the parent component. Why does it need to do that? Because all of the interesting things we'd want to do to turn the lobby back on actually live in `ReactApp.js` - but in order to get back to that we're going to have to hop back up via all the intermediate steps.
 
 We haven't actually set up the parent yet, so let's do that now. We want to add the button into `Room.js`, before the h2 (this is also where we set up the text for the button):
 
@@ -821,7 +880,7 @@ returnToLobby: function () {
 },
 ```
 
-And finally in `App.js` we can set up a method to actually do the interesting things:
+And finally in `ReactApp.js` we can set up a method to actually do the interesting things:
 
 ```js
 returnToLobby: function() {
@@ -891,7 +950,7 @@ socket.on('vote', function(answer, hash) {
 });
 ```
 
-On the client side, again we need to set up a listener in `App.js`'s `componentDidMount`:
+On the client side, again we need to set up a listener in `ReactApp.js`'s `componentDidMount`:
 
 ```js
 socket.on('vote', function(roomData){
@@ -938,7 +997,7 @@ var chartData = {
 };
 ```
 
-Now let's add those methods to `App.js` - there are three things that we are going to need to be able to do to the chart.
+Now let's add those methods to `ReactApp.js` - there are three things that we are going to need to be able to do to the chart.
 
 The first thing we need to be able to do is add columns of data:
 
@@ -1024,7 +1083,7 @@ This is definitely a demo application - what would we have to do to make it prop
 
 #### Serving it properly
 
-The main thing, of course, is that we are currently just serving the application locally on port 3000. For a 'real' site, we'd want some proper hosting space, plus we'd ant to be serving on port 80. Node.js is not appropriate for serving on this low level secure port, for security reasons. So what we should do instead is use a websever like Apache to do port forwarding from port 3000 to 80.
+The main thing, of course, is that we are currently just serving the application locally on port 3000. For a 'real' site, we'd want some proper hosting space, plus we'd want to be serving on port 80. Node.js is not appropriate for serving on this low level secure port, for security reasons. So what we should do instead is use a websever like Apache to do port forwarding from port 3000 to 80.
 
 #### Using a database, garbage collection
 
