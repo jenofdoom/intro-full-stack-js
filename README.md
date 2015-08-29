@@ -47,13 +47,9 @@ And you're all set! We'll pick up from this point.
 
 We're going to build a classroom voting application. We'll be using JavaScript both on the server side (Node, Express, Socket.IO) and on the client side (React, Chart.js, and the Socket.IO client side library). There are git tags in this repo that can help you just between the steps if you are looking for a shortcut rather than writing everything yourself.
 
-The git checkout is of the finished version of the code. Feel free to have a look around, but to work on the tutorial we want to jump to an earlier point in the code:
-
-    git checkout step-0
+The master branch of this repo is of the 'start point' for the tutorial. If you would like to see the finished version of the code then do `git checkout finished`. Feel free to have a look around (and you can run `node app.js` to see the running final application), but to work on the tutorial we want to jump back to the master branch using `git checkout master`.
 
 ### Serving index.html
-
-(if you didn't already, do `git checkout step-0` to jump to this point)
 
 We'll need a web server in order to serve our stub index.html file properly. Create a file called `app.js` in the root folder of the application with the following code:
 
@@ -261,8 +257,6 @@ socket.join(hash);
 
 ### Displaying the new room
 
-(do `git checkout step-4` if you want to jump to this point)
-
 Now that we have more than just a lobby we want to show, it makes sense to replace `<LobbyControls />` as the main component we are rendering. We will replace it with a component we will call "App", which will control if the user is current in the lobby or in a room, and show or hide components as necessary.
 
 #### Adding an app component
@@ -429,8 +423,6 @@ var LobbyControls = React.createClass({
 
 ### Letting others join the room
 
-(do `git checkout step-5` if you want to jump to this point)
-
 It's no good having a room if others can't join it!
 
 #### via lobby
@@ -564,8 +556,6 @@ if (roomData && roomData.active) {
 ```
 
 ### Setting a question and answers
-
-(do `git checkout step-6` if you want to jump to this point)
 
 Of course it's no good having a room if we can't do anything in it. The user who started the room is the room owner. They should have some special controls for setting a question and the answers to go along with it.
 
@@ -844,8 +834,6 @@ You might also wish to add a smidge of css to `main.css` to space the buttons ou
 
 ### Going back to the lobby
 
-(do `git checkout step-7` if you want to jump to this point)
-
 Right now it's kinda annoying to switch rooms. Let's add a button component, for returning to the lobby. We should put it in every room, and also on the no room page.
 
 Create a new component file called `ReturnToLobby.js` and link to it from `index.html`. Put the following in that file:
@@ -922,8 +910,6 @@ returnToLobby: function () {
 
 ### Letting people vote
 
-(do `git checkout step-8` if you want to jump to this point)
-
 Currently the answer buttons do nothing when clicked. Let's wire them up. Add `onClick={this.vote}` to the `<button>` tag in `Room.js`, then create a method called `vote`:
 
 ```js
@@ -965,8 +951,6 @@ socket.on('vote', function(roomData){
 In this fashion the answers totals are propagated down via the state to the Room.
 
 ### Displaying the vote results
-
-(do `git checkout step-9` if you want to jump to this point)
 
 Finally, let's display our results as a graph. We could build a react component to wrap our Chart.js graph, but because it's fairly easy to isolate we'll initialise it seperately and communicate with it bu using some method that we'll set up on the react `App`.
 
@@ -1064,7 +1048,7 @@ reactApp.chartUpdate(roomData.answers);
 this.chartClear();
 ```
 
-That's it! (do `git checkout step-10` if you want to jump to the final code)
+That's it!
 
 ## Ways in which we could expand our application
 
