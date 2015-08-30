@@ -26,7 +26,7 @@ First, we need to install [node.js](https://nodejs.org/) and its package manager
 
 [Mac instructions](http://blog.teamtreehouse.com/install-node-js-npm-mac)
 
-[Ubuntu/Debian/Mint instructions](https://rtcamp.com/tutorials/nodejs/node-js-npm-install-ubuntu/)
+[Ubuntu/Debian/Mint instructions](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager#debian-and-ubuntu-based-linux-distributions)
 
 Once that's done, we can install [Bower](http://bower.io/) using npm. We want to install Bower globally (for more than just this project), so we use a `-g` flag. Note that if you have difficulty installing Bower it might be because you need to install it with administrator permissions - rerun the command with `sudo` in front.
 
