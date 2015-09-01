@@ -77,8 +77,6 @@ When you makes changes to `app.js` you will have to restart the server before th
 
 ### Communicating via sockets
 
-(do `git checkout step-1` if you want to jump to this point)
-
 Socket.io lets us respond to immediately to events happening in users browsers. Each socket connection is one user's connection to the server. Each user has a unique socket ID, too. To start using socket.io we need to add the server side library (the client side library is already included in `index.html`) to our application - add the following line near the top of `app.js`, underneath the `var http = require('http').Server(app);` line:
 
 ```js
@@ -97,11 +95,17 @@ io.on('connection', function(socket){
 });
 ```
 
+That won't do anything yet, because right now we only have the server side of the code. We need to do a bit of setup in `index.html` too. At the bottom of `index.html`, just before the `</body>`, add the following:
+
+```js
+<script type="text/javascript">
+var socket = io.connect();
+</script>
+```
+
 When you refresh the page, you should see a message about a user connecting. If you open the page in another tab or browser you should see the number of users go up to two. And every time you refresh the page from now on, you should get a message about a user disconnecting, then connecting again.
 
 ### Building our first react component
-
-(do `git checkout step-2` if you want to jump to this point)
 
 There's not much to see yet - let's add a component to our client side page. In `index.html`, underneath the H1 tag, add an empty div that we will be inserting our react component into:
 
@@ -127,11 +131,19 @@ var LobbyControls = React.createClass({
 });
 ```
 
-We also need to include our new file in `index.html`, and bootstrap the react component. At the bottom of `index.html`, just before the `</body>`, add the following:
+We also need to include our new file in `index.html`, and bootstrap the react component. We should add a reference to our new `.js` file at the bottom underneath the other script includes
 
 ```html
 <script src="javascripts/LobbyControls.js" type="text/jsx"></script>
+```
+We also need to add a bit of JavaScript into the page - and it needs to be jsx as opposed to normal JavaScript.
+
+Change the `type` of the script block where we initialise socket.io to be `text/jsx`, and add in a call to React render to set up our lobby component.
+
+```html
 <script type="text/jsx">
+var socket = io.connect();
+
 React.render(
   <LobbyControls />,
   document.getElementById('content')
@@ -142,8 +154,6 @@ React.render(
 When you refresh the page you should see the elements being rendered.
 
 ### Creating a room
-
-(do `git checkout step-3` if you want to jump to this point)
 
 Let's make that bottom button do something. First we need to make a control to trigger the room creation, and then we need to actually make the room on the server side.
 
@@ -175,17 +185,7 @@ When you click the button you should get a `clicked` message in the console.
 
 #### Actually creating the room
 
-In our `OnClick` method in `CreateNew` we want to replace the console.log statement with some socket.io code to communicate via a socket to the backend. First, let's add a better way of referencing the socket.io library to the top of the script block we have in `index.html`:
-
-```js
-<script type="text/jsx">
-var socket = io.connect();
-
-React.render(
-  // ...etc...
-```
-
-Now in `CreateNew.js`, replace the `console.log('clicked');` line:
+In our `OnClick` method in `CreateNew` we want to replace the console.log statement with some socket.io code to communicate via a socket to the backend. In `CreateNew.js`, replace the `console.log('clicked');` line:
 
 ```js
 socket.emit('new room');
@@ -230,6 +230,8 @@ socket.on('new room', function(){
 
 Notice that we're giving each room a unique ID based on its position in the array (this is assuming we never remove old rooms from our array, we just mark them as no longer active).
 
+### Nicer room UIDs
+
 Numeric values aren't a very nice way of referring to rooms, perhaps we can replace them with a hash instead. To do so we'll use another npm package called [hashids](https://www.npmjs.com/package/hashids). We can include hashids (which already got installed via our npm install before we started) in our `app.js` file by adding the following at the top of the file where we set up the other libraries:
 
 ```js
@@ -249,13 +251,15 @@ var newRoom = {
 // ...etc...
 ```
 
+#### Namespacing the sockets
+
 We also need to make it so that while the application is running, users that are in the same room have a way of communicating without sending signals to users that *aren't* in the room. Add the following line above the console.log in the new room function:
 
 ```js
 socket.join(hash);
 ```
 
-### Displaying the new room
+#### Displaying the new room
 
 Now that we have more than just a lobby we want to show, it makes sense to replace `<LobbyControls />` as the main component we are rendering. We will replace it with a component we will call "App", which will control if the user is current in the lobby or in a room, and show or hide components as necessary.
 
@@ -302,7 +306,29 @@ We need to explicitly hand our new state variable down to the lobby component. A
 <LobbyControls showLobby={this.state.showLobby} />
 ```
 
-We aren't using that anywhere yet in the lobby component, but it won't matter until we need to be able to hide it.
+#### Hiding the lobby
+
+To actually hide the lobby we need to add some code to our `render` method in `LobbyControls.js`.
+
+```js
+var LobbyControls = React.createClass({
+  render: function() {
+    var lobbyClass = "";
+
+    if (!this.props.showLobby) {
+      lobbyClass = "hidden";
+    }
+
+    return (
+      <div className={lobbyClass}>
+        <h2>You are not in a room</h2>
+```
+
+There is some JavaScript code in the render method to work out if we should add a class of `hidden` to the div (the styling is already set up for this class in `main.css`), based on data passed down from the App component.
+
+Right now there isn't a way of checking that this works because we don't have any code that actually sets `showLobby: false`, but we can test it by __temporarily__ commenting out our `this.setState({showLobby: true});` line in `componentDidMount` in  `ReactApp.js`.
+
+Note that on the App component we're using `state`, which is mutable, whereas in Room we're using `props` (which is set up automatically from `state`) because the variable should be immutable within this component.
 
 #### Adding a room component
 
@@ -333,7 +359,7 @@ Add a `<Room />` tag into the render method of the App component, next to the Lo
 
 Note that now there is more than one element we need to wrap them in a div for the render to be able to append them correctly.
 
-Now we need to use the showRoom variable to actually alter what gets rendered in the room component:
+Now we need to use the showRoom variable to alter what gets rendered in the room component, similar to what we set up for the `LobbyControls` component:
 
 ```js
 var Room = React.createClass({
@@ -354,10 +380,6 @@ var Room = React.createClass({
   }
 });
 ```
-
-There is some JavaScript code in the render method to work out if we should add a class of `hidden` to the div (the styling is already set up for this class in `main.css`), based on data passed down from the App component.
-
-Note that on the App component we're using state, which is mutable, whereas in Room we're using props (which is set up automatically from state) because the variable should be immutable within this component.
 
 #### Showing the room component when it is created
 
@@ -392,22 +414,6 @@ componentDidMount: function() {
 Note that we have to set up a variable called `reactApp` so we can refer to react's methods within App (because within a `socket.on` function `this` will be redefined).
 
 Now when we restart the server and refresh the page, when we click create room we should be shown the room component.
-
-#### Hiding the lobby
-
-```js
-var LobbyControls = React.createClass({
-  render: function() {
-    var lobbyClass = "";
-
-    if (!this.props.showLobby) {
-      lobbyClass = "hidden";
-    }
-
-    return (
-      <div className={lobbyClass}>
-        <h2>You are not in a room</h2>
-```
 
 #### Passing data in to the room
 
@@ -979,6 +985,9 @@ var chartData = {
         }
     ]
 };
+var answerChart = new Chart(chartElement).Bar(chartData, {
+      responsive: true
+    });
 ```
 
 Now let's add those methods to `ReactApp.js` - there are three things that we are going to need to be able to do to the chart.
