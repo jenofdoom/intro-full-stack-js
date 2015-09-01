@@ -47,7 +47,7 @@ And you're all set! We'll pick up from this point.
 
 We're going to build a classroom voting application. We'll be using JavaScript both on the server side (Node, Express, Socket.IO) and on the client side (React, Chart.js, and the Socket.IO client side library).
 
-The master branch of this repo is of the 'start point' for the tutorial. If you would like to see the finished version of the code then do `git checkout finished`. Feel free to have a look around (and you can run `node app.js` to see the running final application), but to work on the tutorial we want to jump back to the master branch using `git checkout master`.
+The master branch of this repo is of the 'start point' for the tutorial. If you would like to see the finished version of the code then do `git checkout finished`. Feel free to have a look around (and you can run `gulp` to see the running final application - press `Control C` to stop the server afterwards), but to work on the tutorial we want to jump back to the master branch using `git checkout master`.
 
 ### Serving index.html
 
@@ -69,11 +69,11 @@ http.listen(3000, function(){
 });
 ```
 
-Now, on the command line we should be able to run `node app.js` and get back a message saying `listening on *:3000`. If you navigate to [localhost:3000](http://localhost:3000/) in a browser you should see the title of our application in a grey font (because the basic stylesheet is being served correctly).
+Now, on the command line we should be able to run `gulp` and get back a message saying `listening on *:3000`. If you navigate to [localhost:3000](http://localhost:3000/) in a browser you should see the title of our application in a grey font (because the basic stylesheet is being served correctly).
 
 #### Important note
 
-When you makes changes to `app.js` you will have to restart the server before they will take effect. In your terminal where the `node app.js` process is running, exit by pressing `Control-C`. Then run `node app.js` again.
+Normally we might run this file directly by doing `node app.js` on the command line. But we are instead using `gulp`, which has an extra benefit that it will restart the server for us whenever we make changes to `app.js`.
 
 ### Communicating via sockets
 
@@ -113,7 +113,7 @@ There's not much to see yet - let's add a component to our client side page. In 
 <div id="content"></div>
 ```
 
-React and its JSX compiler are already included at the bottom of the file, but we should also add a file for us to put our custom code in. Because react is designed to be modular, we will create a file for each component. Let's make a component for our lobby, where users will be able to create new rooms or join existing ones. Make a file called `LobbyControls.js` in `public/javascripts` and give it the following contents:
+React and its JSX compiler are already included at the bottom of the file, but we should also add a file for us to put our custom code in. Because react is designed to be modular, we will create a file for each component. Let's make a component for our lobby, where users will be able to create new rooms or join existing ones. Make a file called `LobbyControls.js` in `src/js` and give it the following contents:
 
 ```js
 var LobbyControls = React.createClass({
@@ -159,7 +159,7 @@ Let's make that bottom button do something. First we need to make a control to t
 
 #### Adding the create room button
 
-We'll make the button into its own component, so if we wanted we could use it elsewhere in our application. Make a new file in `public/javascripts` called `CreateNew.js` and link to it from the bottom of `index.html`, like you did with the last component. Give it the following contents:
+We'll make the button into its own component, so if we wanted we could use it elsewhere in our application. Make a new file in `src/js` called `CreateNew.js` and link to it from the bottom of `index.html`, like you did with the last component. Give it the following contents:
 
 ```js
 var CreateNew = React.createClass({
